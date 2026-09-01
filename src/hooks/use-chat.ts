@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ConversationDTO, MessageDTO } from "@/types";
+import { useAuth } from "./use-auth";
 
 export function useChat() {
   const [conversations, setConversations] = useState<ConversationDTO[]>([]);
@@ -10,6 +11,7 @@ export function useChat() {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const { user } = useAuth();
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -123,6 +125,7 @@ export function useChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId: activeConversationId,
+          name: user?.name,
           message: content.trim(),
         }),
       });

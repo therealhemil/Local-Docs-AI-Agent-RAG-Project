@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { conversationId, message } = body;
+    let { conversationId, message, name } = body;
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json(
@@ -48,28 +48,60 @@ export async function POST(req: NextRequest) {
       role: "USER",
       content: cleanMessage,
     });
+    // console.log('USer question message', userMsg);
+
+
+    //Record User Message for content
+    const UserMessageAPI = process.env.N8N_USER_MESSAGE_QUESTION_API
+    const UserMesssage = await fetch(`${UserMessageAPI}`,{
+      method : "POST",
+      body : JSON.stringify({
+        action: 'sendMessage',
+        role : 'USER',
+        sessionid : conversationId,
+        message: cleanMessage,
+        userName : name
+      })
+    })
+
+
+    const AiResult = await UserMesssage.text()
+
+    console.log('User Question msg', UserMesssage);
+    
+
+
+
 
     // 2. Call AI Service (n8n pipeline / structured mock)
-    const aiResult = await aiService.askQuestion({
-      userId: session.userId,
-      conversationId,
-      question: cleanMessage,
-    });
+    // const aiResult = await aiService.askQuestion({
+    //   userId: session.userId,
+    //   conversationId,
+    //   question: cleanMessage,
+    // });
+    // console.log('Ai Result', aiResult);
+
+    
+
 
     // 3. Record assistant's response with sources
-    const assistantMsg = await conversationService.addMessage({
-      conversationId,
-      role: "ASSISTANT",
-      content: aiResult.answer,
-      sources: aiResult.sources,
-    });
+    // const assistantMsg = await conversationService.addMessage({
+    //   conversationId,
+    //   role: "ASSISTANT",
+    //   content: aiResult.answer,
+    //   sources: aiResult.sources,
+    // });
+
+
+    // console.log('ai assiatnt message', assistantMsg);
+    
 
     return NextResponse.json(
       {
         conversationId,
         userMessage: userMsg,
-        assistantMessage: assistantMsg,
-        sources: aiResult.sources,
+        assistantMessage: AiResult,
+        // sources: aiResult.sources,
       },
       { status: 200 }
     );

@@ -128,6 +128,8 @@ export default function AssistantPage() {
           onOpenVoice={() => setIsVoiceOpen(true)}
           isSending={isSending}
         />
+
+
       </div>
 
       {/* Voice Assistant Modal */}

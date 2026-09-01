@@ -12,28 +12,13 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useDocuments } from "@/hooks/use-documents";
 import { Button } from "@/components/ui/button";
-import {
-  Sparkles,
-  ArrowRight,
-  HardDrive,
-  ShieldCheck,
-  Loader2,
-  UploadCloud,
-} from "lucide-react";
+import { Sparkles, ArrowRight, HardDrive, ShieldCheck, Loader2, UploadCloud } from "lucide-react";
 
 export default function UploadPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
-  const {
-    documents,
-    isLoading: docsLoading,
-    isUploading,
-    uploadQueue,
-    uploadFiles,
-    deleteDocument,
-    clearQueue,
-  } = useDocuments();
+  const { documents, isLoading: docsLoading, isUploading, uploadQueue, uploadFiles, deleteDocument, clearQueue } = useDocuments();
 
   const [duplicateFilesAlert, setDuplicateFilesAlert] = useState<string[] | null>(null);
 
@@ -52,19 +37,26 @@ export default function UploadPage() {
   }
 
   const handleUploadFiles = (files: File[]) => {
+    // Regex check for image extensions as a fallback for missing MIME types
+    const imageExtensionRegex = /\.(jpe?g|png|gif|webp|svg|bmp|ico|tiff?)$/i;
+
+    // Identify invalid image files
+    const imageFiles = files.filter((file) => file.type.startsWith("image/") || imageExtensionRegex.test(file.name));
+
+    // If any image is found, stop upload and show error
+    if (imageFiles.length > 0) {
+      const invalidNames = imageFiles.map((f) => f.name).join(", ");
+      toast.error(`Image uploads are not allowed: ${invalidNames}. Please upload documents only (PDF, DOCX, TXT, etc.).`, "Unsupported File Type");
+      return; // Stop execution
+    }
+
     uploadFiles(files, {
       onDuplicateFound: (duplicateNames) => {
         setDuplicateFilesAlert(duplicateNames);
-        toast.warning(
-          `"${duplicateNames.join(", ")}" is already uploaded in your workspace.`,
-          "Duplicate File"
-        );
+        toast.warning(`"${duplicateNames.join(", ")}" is already uploaded in your workspace.`, "Duplicate File");
       },
       onSuccess: (count) => {
-        toast.success(
-          `Successfully uploaded ${count} file${count > 1 ? "s" : ""} to Google Drive!`,
-          "Upload Complete"
-        );
+        toast.success(`Successfully uploaded ${count} file${count > 1 ? "s" : ""} to Google Drive!`, "Upload Complete");
       },
     });
   };
@@ -83,11 +75,9 @@ export default function UploadPage() {
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Workspace Hub • {user?.name}</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Document & Image Workspace
-              </h1>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Document Workspace</h1>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                Upload documents & images to synchronize with Google Drive and manage your files below.
+                Upload documents to synchronize with Google Drive and manage your files below.
               </p>
             </div>
 
@@ -101,32 +91,21 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {/* 1. Upload Documents & Images Box */}
+          {/* 1. Upload Documents Box */}
           <div className="w-full">
-            <UploadDropzone
-              onUpload={handleUploadFiles}
-              isUploading={isUploading}
-            />
+            <UploadDropzone onUpload={handleUploadFiles} isUploading={isUploading} />
           </div>
 
           {/* 2. Uploading Process Tracker */}
           {uploadQueue.length > 0 && (
             <div className="w-full">
-              <UploadProgressQueue
-                uploadQueue={uploadQueue}
-                isUploading={isUploading}
-                onClearQueue={clearQueue}
-              />
+              <UploadProgressQueue uploadQueue={uploadQueue} isUploading={isUploading} onClearQueue={clearQueue} />
             </div>
           )}
 
           {/* 3. Workspace Files List */}
           <div className="w-full pt-2">
-            <DocumentList
-              documents={documents}
-              isLoading={docsLoading}
-              onDelete={deleteDocument}
-            />
+            <DocumentList documents={documents} isLoading={docsLoading} onDelete={deleteDocument} />
           </div>
         </div>
       </main>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { DocumentDTO } from "@/types";
+import { useAuth } from "./use-auth";
 
 export interface FileUploadStatus {
   file: File;
@@ -18,6 +19,7 @@ export function useDocuments() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadQueue, setUploadQueue] = useState<FileUploadStatus[]>([]);
+  const { user } = useAuth();
 
   const fetchDocuments = useCallback(async () => {
     try {
@@ -97,6 +99,7 @@ export function useDocuments() {
     for (const item of initialQueue) {
       const formData = new FormData();
       formData.append("file", item.file);
+      formData.append("name", user?.name || "Unknown");
 
       try {
         // Animate progress to 60%

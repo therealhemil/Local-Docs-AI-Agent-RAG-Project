@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(err.error || "Failed to initialize user workspace");
     }
 
-    const data = await res.json();
+  const data = await res.json();
     setUser(data.user);
     return data.user;
   };

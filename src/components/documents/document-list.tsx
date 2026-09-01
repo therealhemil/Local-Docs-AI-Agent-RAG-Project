@@ -47,14 +47,14 @@ export function DocumentList({ documents, isLoading, onDelete, onUploadClick }: 
   };
 
   const getFileIcon = (fileName: string) => {
-    const ext = fileName.split(".").pop()?.toLowerCase();
-    if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext || "")) {
-      return (
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-sm">
-          <ImageIcon className="w-5 h-5" />
-        </div>
-      );
-    }
+    // const ext = fileName.split(".").pop()?.toLowerCase();
+    // if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext || "")) {
+    //   return (
+    //     <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-sm">
+    //       <ImageIcon className="w-5 h-5" />
+    //     </div>
+    //   );
+    // }
     return (
       <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500/20 to-blue-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 flex items-center justify-center shrink-0 shadow-sm">
         <FileText className="w-5 h-5" />
@@ -86,7 +86,7 @@ export function DocumentList({ documents, isLoading, onDelete, onUploadClick }: 
           No files in workspace yet
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-          Upload documents or images from the left panel to sync them with Google Drive.
+          Upload documents from the left panel to sync them with Google Drive.
         </p>
       </div>
     );

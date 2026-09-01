@@ -18,6 +18,9 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
   // Helper to parse simple markdown formatting cleanly
   const renderFormattedText = (text: string) => {
+  console.log('AGENT RESPINSE IN TEXT', text);
+    
+
     const lines = text.split("\n");
     return lines.map((line, lineIdx) => {
       // Bold handling
