@@ -115,3 +115,85 @@ body {
 .audio-bar:nth-child(5) {
   animation-delay: 0.3s;
 }
+
+/* ChatGPT Voice Mode Orb Animations */
+@keyframes orbBreathing {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 45px rgba(56, 189, 248, 0.45), 0 0 90px rgba(45, 212, 191, 0.25);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 70px rgba(56, 189, 248, 0.7), 0 0 130px rgba(45, 212, 191, 0.4);
+  }
+}
+
+@keyframes orbThinking {
+  0% {
+    transform: rotate(0deg) scale(1);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+    filter: hue-rotate(90deg);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes orbSpeaking {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 50px rgba(16, 185, 129, 0.5), 0 0 100px rgba(56, 189, 248, 0.3);
+  }
+  25% {
+    transform: scale(1.12);
+    box-shadow: 0 0 85px rgba(16, 185, 129, 0.75), 0 0 150px rgba(56, 189, 248, 0.55);
+  }
+  50% {
+    transform: scale(0.96);
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.4), 0 0 80px rgba(56, 189, 248, 0.25);
+  }
+  75% {
+    transform: scale(1.09);
+    box-shadow: 0 0 75px rgba(16, 185, 129, 0.7), 0 0 135px rgba(56, 189, 248, 0.45);
+  }
+}
+
+@keyframes rippleWave {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.animate-orb-listening {
+  animation: orbBreathing 2.8s ease-in-out infinite;
+}
+
+.animate-orb-thinking {
+  animation: orbThinking 3s linear infinite;
+}
+
+.animate-orb-speaking {
+  animation: orbSpeaking 1.4s ease-in-out infinite;
+}
+
+.animate-ripple-1 {
+  animation: rippleWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.animate-ripple-2 {
+  animation: rippleWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite 0.8s;
+}
+
+.animate-ripple-3 {
+  animation: rippleWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite 1.6s;
+}
+

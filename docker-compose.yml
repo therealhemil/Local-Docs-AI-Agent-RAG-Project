@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ai_doc_assistant
+      POSTGRES_DB:    
     ports:
       - "5432:5432"
     volumes:

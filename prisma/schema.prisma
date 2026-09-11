@@ -22,17 +22,62 @@ enum MessageRole {
 }
 
 model User {
-  id                  String         @id @default(uuid())
+  id                  String            @id @default(uuid())
   name                String
-  normalizedName      String         @unique
+  email               String?           @unique
+  passwordHash        String?
+  authProvider        String            @default("CREDENTIALS") // "CREDENTIALS" | "GOOGLE" | "GITHUB" | "DEMO"
+  avatarUrl           String?
+  normalizedName      String            @unique
   googleDriveFolderId String?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+
+  // User Tracking Details
+  firstLoginAt        DateTime?         @default(now())
+  lastLoginAt         DateTime?         @default(now())
+  loginCount          Int               @default(1)
+  lastIpAddress       String?
+  lastUserAgent       String?
+  lastDevice          String?
+  lastBrowser         String?
+  lastOs              String?
+  country             String?
+  city                String?
+  timezone            String?
+  referrer            String?
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   documents           Document[]
   conversations       Conversation[]
+  trackingLogs        UserTrackingLog[]
 
   @@map("users")
+}
+
+model UserTrackingLog {
+  id               String   @id @default(uuid())
+  userId           String
+  action           String   // "SIGNUP" | "LOGIN" | "SESSION_START"
+  ipAddress        String?
+  userAgent        String?
+  device           String?
+  browser          String?
+  os               String?
+  country          String?
+  city             String?
+  timezone         String?
+  screenResolution String?
+  referrer         String?
+  metadata         String?  // JSON context
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("user_tracking_logs")
 }
 
 model Document {

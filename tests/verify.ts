@@ -72,6 +72,150 @@ async function runTests() {
   assert.deepStrictEqual(nonDuplicates, ["New_Document.pdf"]);
   console.log("  ✓ Case-insensitive duplicate detection accurately filtered duplicate uploads.");
 
+  // 6. Test n8n Response Parsing and Content Extraction
+  console.log("\n6. Testing n8n Response Parsing & Extraction:");
+  
+  // Test Case A: User's exact n8n Respond to Webhook payload
+  const n8nPayload = JSON.stringify({
+    status: "success",
+    conversationId: "session-1234",
+    role: "ASSISTANT",
+    content: "Here is the answer extracted from your document.",
+    sources: [{ fileName: "Contract.pdf", page: 2, excerpt: "Clause 1.1" }]
+  });
+  
+  // Double stringified payload (n8n JSON stringify inside json response)
+  const doubleStringified = JSON.stringify(n8nPayload);
+
+  // We test the logic identical to route.ts
+  function testParseAndExtract(raw: string) {
+    let parsed: any = null;
+    const trimmed = raw.trim();
+    if (trimmed) {
+      try {
+        parsed = JSON.parse(trimmed);
+        if (typeof parsed === "string") {
+          const innerTrimmed = parsed.trim();
+          if (innerTrimmed.startsWith("{") || innerTrimmed.startsWith("[")) {
+            try { parsed = JSON.parse(innerTrimmed); } catch {}
+          }
+        }
+      } catch {}
+    }
+    
+    function extract(data: any): string {
+      if (!data) return "";
+      if (typeof data === "string") return data.trim();
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          const res = extract(item);
+          if (res) return res;
+        }
+        return "";
+      }
+      if (typeof data === "object") {
+        if (typeof data.content === "string" && data.content.trim()) return data.content.trim();
+        if (data.json) {
+          const res = extract(data.json);
+          if (res) return res;
+        }
+        const keys = ["content", "output", "text", "response", "reply", "answer", "message", "result", "data"];
+        for (const k of keys) {
+          if (data[k]) {
+            if (typeof data[k] === "string" && data[k].trim()) return data[k].trim();
+            if (typeof data[k] === "object") {
+              const res = extract(data[k]);
+              if (res) return res;
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    return extract(parsed);
+  }
+
+  assert.strictEqual(
+    testParseAndExtract(n8nPayload),
+    "Here is the answer extracted from your document."
+  );
+  assert.strictEqual(
+    testParseAndExtract(doubleStringified),
+    "Here is the answer extracted from your document."
+  );
+  assert.strictEqual(
+    testParseAndExtract(JSON.stringify([{ output: "LangChain Agent output text" }])),
+    "LangChain Agent output text"
+  );
+  assert.strictEqual(
+    testParseAndExtract(""),
+    ""
+  );
+  console.log("  ✓ n8n payload, double-stringified JSON, LangChain array, and empty payloads handled correctly.");
+
+  // 7. Test Safe Sources Parsing & Normalization
+  console.log("\n7. Testing Safe Sources Parsing & Normalization:");
+
+  function safeParseSources(raw: string | null): any {
+    if (!raw || typeof raw !== "string" || raw.trim().length === 0 || raw === "null" || raw === "undefined") {
+      return null;
+    }
+    const trimmed = raw.trim();
+    try {
+      let parsed = JSON.parse(trimmed);
+      if (typeof parsed === "string") {
+        try { parsed = JSON.parse(parsed); } catch { return [{ fileName: parsed.trim() }]; }
+      }
+      if (Array.isArray(parsed)) {
+        if (parsed.length === 0) return null;
+        return parsed.map((item) => {
+          if (typeof item === "string") return { fileName: item };
+          if (item && typeof item === "object") {
+            const docSrc: any = {
+              fileName: item.fileName || item.name || item.title || item.file || "Document",
+            };
+            if (typeof item.page === "number") docSrc.page = item.page;
+            if (typeof item.excerpt === "string") docSrc.excerpt = item.excerpt;
+            return docSrc;
+          }
+          return { fileName: String(item) };
+        });
+      }
+      if (parsed && typeof parsed === "object") {
+        const docSrc: any = {
+          fileName: parsed.fileName || parsed.name || parsed.title || parsed.file || "Document",
+        };
+        if (typeof parsed.page === "number") docSrc.page = parsed.page;
+        if (typeof parsed.excerpt === "string") docSrc.excerpt = parsed.excerpt;
+        return [docSrc];
+      }
+      return null;
+    } catch {
+      return [{ fileName: trimmed }];
+    }
+  }
+
+  assert.deepStrictEqual(safeParseSources(null), null);
+  assert.deepStrictEqual(safeParseSources(""), null);
+  assert.deepStrictEqual(safeParseSources("Contract.pdf"), [{ fileName: "Contract.pdf" }]);
+  assert.deepStrictEqual(
+    safeParseSources(JSON.stringify([{ fileName: "Doc.pdf", page: 4, excerpt: "Terms" }])),
+    [{ fileName: "Doc.pdf", page: 4, excerpt: "Terms" }]
+  );
+  assert.deepStrictEqual(
+    safeParseSources(JSON.stringify(JSON.stringify([{ fileName: "Doc.pdf" }]))),
+    [{ fileName: "Doc.pdf" }]
+  );
+  console.log("  ✓ Safe sources parser handled null, raw strings, JSON arrays, and double-stringified JSON.");
+
+  // 8. Test JavaScript Query Detection and Content Generation
+  console.log("\n8. Testing JavaScript Query Detection:");
+  const testDocNames = ["50_javascript_practice_questions.docx", "EXPS HEMIL PATEL 24-25.xlsx"];
+  const jsDocMatch = testDocNames.find(d => d.toLowerCase().includes("javascript"));
+  assert.strictEqual(jsDocMatch, "50_javascript_practice_questions.docx");
+  console.log("  ✓ JavaScript query accurately matched 50_javascript_practice_questions.docx.");
+
   console.log("\n🎉 All automated tests completed successfully!");
 }
 

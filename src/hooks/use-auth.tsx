@@ -8,6 +8,12 @@ interface AuthContextType {
   isLoading: boolean;
   checkUsername: (name: string) => Promise<CheckUserResponse>;
   loginOrCreateUser: (name: string) => Promise<UserDTO>;
+  signupWithEmail: (name: string, email: string, password: string) => Promise<UserDTO>;
+  loginWithEmail: (email: string, password: string) => Promise<UserDTO>;
+  loginWithSocial: (
+    provider: "google" | "github" | "demo",
+    details?: { email?: string; name?: string; avatarUrl?: string }
+  ) => Promise<UserDTO>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -55,11 +61,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.json();
   };
 
+  const getClientMeta = () => {
+    if (typeof window === "undefined") return {};
+    return {
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      screenResolution: `${window.screen.width}x${window.screen.height}`,
+      referrer: document.referrer || window.location.origin,
+      language: navigator.language,
+    };
+  };
+
+  const signupWithEmail = async (name: string, email: string, password: string): Promise<UserDTO> => {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        clientDetails: getClientMeta(),
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to create account");
+    }
+
+    const data = await res.json();
+    setUser(data.user);
+    return data.user;
+  };
+
+  const loginWithEmail = async (email: string, password: string): Promise<UserDTO> => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        clientDetails: getClientMeta(),
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to log in");
+    }
+
+    const data = await res.json();
+    setUser(data.user);
+    return data.user;
+  };
+
+  const loginWithSocial = async (
+    provider: "google" | "github" | "demo",
+    details?: { email?: string; name?: string; avatarUrl?: string }
+  ): Promise<UserDTO> => {
+    const res = await fetch("/api/auth/social", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        provider,
+        email: details?.email,
+        name: details?.name,
+        avatarUrl: details?.avatarUrl,
+        clientDetails: getClientMeta(),
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || `${provider} authentication failed`);
+    }
+
+    const data = await res.json();
+    setUser(data.user);
+    return data.user;
+  };
+
   const loginOrCreateUser = async (name: string): Promise<UserDTO> => {
     const res = await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({
+        name,
+        clientDetails: getClientMeta(),
+      }),
     });
 
     if (!res.ok) {
@@ -67,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(err.error || "Failed to initialize user workspace");
     }
 
-  const data = await res.json();
+    const data = await res.json();
     setUser(data.user);
     return data.user;
   };
@@ -89,6 +177,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         checkUsername,
         loginOrCreateUser,
+        signupWithEmail,
+        loginWithEmail,
+        loginWithSocial,
         logout,
         refreshUser: fetchCurrentUser,
       }}

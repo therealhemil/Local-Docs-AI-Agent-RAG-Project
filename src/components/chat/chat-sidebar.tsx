@@ -16,6 +16,8 @@ import {
   UploadCloud,
   ChevronRight,
   FolderOpen,
+  PanelLeftClose,
+  X,
 } from "lucide-react";
 
 interface ChatSidebarProps {
@@ -25,6 +27,7 @@ interface ChatSidebarProps {
   onSelectConversation: (id: string) => void;
   onNewChat: () => void;
   onDeleteConversation: (id: string) => void;
+  onClose?: () => void;
   onCloseMobile?: () => void;
 }
 
@@ -35,32 +38,51 @@ export function ChatSidebar({
   onSelectConversation,
   onNewChat,
   onDeleteConversation,
+  onClose,
   onCloseMobile,
 }: ChatSidebarProps) {
   const { user, logout } = useAuth();
+  const handleClose = onClose || onCloseMobile;
 
   return (
-    <aside className="h-full flex flex-col justify-between bg-slate-50/80 dark:bg-slate-900/90 border-r border-slate-200 dark:border-slate-800 w-72 sm:w-80 shrink-0">
+    <aside className="h-full flex flex-col justify-between bg-slate-50/90 dark:bg-slate-900/95 border-r border-slate-200 dark:border-slate-800 w-72 sm:w-80 shrink-0 shadow-lg md:shadow-none">
       {/* Top Header & New Chat */}
       <div className="p-4 space-y-3">
-        {/* Brand */}
+        {/* Brand & Close Drawer Button */}
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-sky-500 flex items-center justify-center text-white dark:text-slate-950 shadow-sm">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-xl bg-sky-500 flex items-center justify-center text-white dark:text-slate-950 shadow-sm group-hover:scale-105 transition-transform">
               <Sparkles className="w-4 h-4" />
             </div>
             <span className="font-bold text-sm text-slate-900 dark:text-white">
               AI Assistant
             </span>
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            {handleClose && (
+              <button
+                accessKey="b"
+                onClick={handleClose}
+                title="Close drawer (ALT + B)"
+                aria-label="Close drawer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* New Chat Button */}
         <button
+          accessKey="n"
+          title="New Chat (Alt + N)"
           onClick={() => {
             onNewChat();
-            if (onCloseMobile) onCloseMobile();
+            if (handleClose && typeof window !== "undefined" && window.innerWidth < 768) {
+              handleClose();
+            }
           }}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white dark:bg-sky-500 dark:hover:bg-sky-400 dark:text-slate-950 text-xs font-semibold shadow-sm transition-all"
         >
@@ -96,7 +118,9 @@ export function ChatSidebar({
                     }`}
                     onClick={() => {
                       onSelectConversation(convo.id);
-                      if (onCloseMobile) onCloseMobile();
+                      if (handleClose && typeof window !== "undefined" && window.innerWidth < 768) {
+                        handleClose();
+                      }
                     }}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">

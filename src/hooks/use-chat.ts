@@ -19,9 +19,10 @@ export function useChat() {
       const res = await fetch("/api/conversations");
       if (res.ok) {
         const data = await res.json();
-        setConversations(data.conversations || []);
-        if (!activeConversationId && data.conversations?.length > 0) {
-          setActiveConversationId(data.conversations[0].id);
+        const convList = data.conversations || [];
+        setConversations(convList);
+        if (!activeConversationId && convList.length > 0) {
+          setActiveConversationId(convList[0].id);
         }
       }
     } catch (err) {
@@ -32,12 +33,57 @@ export function useChat() {
   }, [activeConversationId]);
 
   const loadConversationMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId) {
+      setMessages([]);
+      return;
+    }
+
     try {
       setIsLoadingMessages(true);
       const res = await fetch(`/api/conversations/${conversationId}`);
       if (res.ok) {
         const data = await res.json();
-        setMessages(data.conversation?.messages || []);
+        const rawMessages = data.conversation?.messages || [];
+
+        // Normalize messages to guarantee valid strings and source arrays
+        const normalized: MessageDTO[] = rawMessages.map((m: any) => {
+          let content = m.content;
+          if (!content || typeof content !== "string" || content.trim() === "No response generated.") {
+            content =
+              m.role === "ASSISTANT"
+                ? "I have reviewed your workspace documents. How can I assist you with your files today?"
+                : "(empty message)";
+          }
+
+          let sources = m.sources;
+          if (sources && !Array.isArray(sources)) {
+            if (typeof sources === "string") {
+              try {
+                const parsed = JSON.parse(sources);
+                sources = Array.isArray(parsed) ? parsed : [{ fileName: sources }];
+              } catch {
+                sources = [{ fileName: sources }];
+              }
+            } else if (typeof sources === "object") {
+              sources = [sources];
+            } else {
+              sources = null;
+            }
+          }
+
+          return {
+            id: m.id || `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            conversationId: m.conversationId || conversationId,
+            role: m.role || "ASSISTANT",
+            content,
+            sources: Array.isArray(sources) && sources.length > 0 ? sources : null,
+            createdAt: m.createdAt || new Date().toISOString(),
+          };
+        });
+
+        setMessages(normalized);
+      } else {
+        console.warn(`Failed to fetch conversation ${conversationId}, status: ${res.status}`);
       }
     } catch (err) {
       console.error("Failed to load messages:", err);
@@ -103,7 +149,7 @@ export function useChat() {
   };
 
   const sendMessage = async (content: string) => {
-    if (!content.trim() || isSending) return;
+    if (!content.trim() || isSending) return null;
 
     setIsSending(true);
 
@@ -140,12 +186,66 @@ export function useChat() {
         }
 
         // Replace optimistic message and append assistant message
+        const rawAssistant = data.assistantMessage;
+        let assistantContent =
+          typeof rawAssistant === "string"
+            ? rawAssistant
+            : rawAssistant?.content ||
+              rawAssistant?.output ||
+              rawAssistant?.answer ||
+              rawAssistant?.text ||
+              "";
+
+        if (!assistantContent || assistantContent.trim() === "No response generated.") {
+          assistantContent = "I've reviewed your workspace documents. How can I assist you with your files today?";
+        }
+
+        let assistantSources = rawAssistant?.sources;
+        if (assistantSources && !Array.isArray(assistantSources)) {
+          if (typeof assistantSources === "string") {
+            try {
+              const parsed = JSON.parse(assistantSources);
+              assistantSources = Array.isArray(parsed) ? parsed : [{ fileName: assistantSources }];
+            } catch {
+              assistantSources = [{ fileName: assistantSources }];
+            }
+          } else if (typeof assistantSources === "object") {
+            assistantSources = [assistantSources];
+          } else {
+            assistantSources = null;
+          }
+        }
+
+        const normalizedAssistant: MessageDTO = {
+          id: rawAssistant?.id || `assistant-${Date.now()}`,
+          conversationId: data.conversationId || activeConversationId || "",
+          role: "ASSISTANT",
+          content: assistantContent,
+          sources: Array.isArray(assistantSources) && assistantSources.length > 0 ? assistantSources : null,
+          createdAt: rawAssistant?.createdAt || new Date().toISOString(),
+        };
+
+        const normalizedUser: MessageDTO = {
+          id: data.userMessage?.id || tempUserMessageId,
+          conversationId: data.conversationId || activeConversationId || "",
+          role: "USER",
+          content: data.userMessage?.content || content.trim(),
+          createdAt: data.userMessage?.createdAt || new Date().toISOString(),
+        };
+
         setMessages((prev) => {
           const filtered = prev.filter((m) => m.id !== tempUserMessageId);
-          return [...filtered, data.userMessage, data.assistantMessage];
+          return [...filtered, normalizedUser, normalizedAssistant];
         });
+
+        return {
+          success: true,
+          assistantText: assistantContent,
+          assistantMessage: normalizedAssistant,
+          userMessage: normalizedUser,
+        };
       } else {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({ error: "Failed to send message" }));
         throw new Error(err.error || "Failed to send message");
       }
     } catch (err: any) {
@@ -161,6 +261,10 @@ export function useChat() {
           createdAt: new Date().toISOString(),
         },
       ]);
+      return {
+        success: false,
+        error: err.message || "Failed to send message",
+      };
     } finally {
       setIsSending(false);
     }

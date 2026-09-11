@@ -28,9 +28,9 @@ export class DocumentService {
     if (mimeType && !ALLOWED_MIME_TYPES.includes(mimeType)) {
       // Check file extension as fallback
       const ext = fileName.split(".").pop()?.toLowerCase();
-      const allowedExts = ["pdf", "docx", "doc", "txt", "md", "csv", "png", "jpg", "jpeg", "webp"];
+      const allowedExts = ["pdf", "docx", "doc", "txt", "md", "csv", 'xls', 'xlsx', 'csv'];
       if (!ext || !allowedExts.includes(ext)) {
-        throw new Error(`File type for "${fileName}" is not supported. Please upload PDF, Word, TXT, or image files.`);
+        throw new Error(`File type for "${fileName}" is not supported. Please upload PDF, Word, TXT, XLS, Or CSV.`);
       }
     }
   }

@@ -6,16 +6,15 @@ import { extractClientDetails } from "@/lib/tracking";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, clientDetails } = body;
+    const { name, email, password, clientDetails } = body;
 
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ error: "Username is required." }, { status: 400 });
+    if (!name || !email || !password) {
+      return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });
     }
 
-    // Extract comprehensive client tracking details (IP, user-agent, device, OS, browser, geolocation, timezone)
     const trackingData = extractClientDetails(req, clientDetails);
 
-    const user = await userService.createUser(name, trackingData);
+    const user = await userService.signupWithCredentials({ name, email, password }, trackingData);
 
     // Call n8n workflow if configured
     const webhookFolderUrl = process.env.N8N_CREATE_FOLDER_WEBHOOK_URL;
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (webhookFolderUrl) {
       try {
         console.log("Calling n8n folder webhook:", webhookFolderUrl);
-        
+
         const n8nResponse = await fetch(webhookFolderUrl, {
           method: "POST",
           headers: {
@@ -50,9 +49,8 @@ export async function POST(req: NextRequest) {
       normalizedName: user.normalizedName,
     });
 
-    const response = NextResponse.json({ user, message: "User workspace ready." }, { status: 201 });
+    const response = NextResponse.json({ user, message: "Account created successfully." }, { status: 201 });
 
-    // Set secure HTTP-only cookie
     response.cookies.set({
       name: SESSION_COOKIE_NAME,
       value: token,
@@ -65,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error("[API: /api/users] Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to create user." }, { status: 500 });
+    console.error("[API: /api/auth/signup] Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to create account." }, { status: 400 });
   }
 }

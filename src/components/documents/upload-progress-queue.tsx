@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   FileText,
   Image as ImageIcon,
@@ -143,6 +144,39 @@ export function UploadProgressQueue({
           );
         })}
       </div>
+
+      {/* Completion Banner with Enabled Assistant Button */}
+      {!isUploading && uploadQueue.length > 0 && (
+        <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2.5 animate-in fade-in">
+          <div className="flex items-center gap-1.5 text-xs">
+            {errorCount === 0 ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-emerald-700 dark:text-emerald-300 font-medium">
+                  All documents synchronized successfully.
+                </span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-slate-600 dark:text-slate-400">
+                  Upload finished with {errorCount} {errorCount === 1 ? "error" : "errors"}.
+                </span>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/assistant"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-sm transition-all"
+            >
+              <span>Open Assistant</span>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

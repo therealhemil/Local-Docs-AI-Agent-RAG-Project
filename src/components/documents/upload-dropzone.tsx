@@ -56,7 +56,7 @@ export function UploadDropzone({ onUpload, isUploading }: UploadDropzoneProps) {
           <ArrowUpCircle className="w-4 h-4 text-sky-500" />
           <span>Upload Documents & Images</span>
         </h3>
-        <span className="text-[11px] text-slate-400 font-mono">PDF, DOCX, TXT, PNG, JPG, WEBP</span>
+        <span className="text-[11px] text-slate-400 font-mono">PDF, DOCX, TXT, WEBP</span>
       </div>
 
       {/* Drag and Drop Zone Card */}
@@ -75,7 +75,7 @@ export function UploadDropzone({ onUpload, isUploading }: UploadDropzoneProps) {
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".pdf,.docx,.doc,.txt,.md"
+          accept=".pdf,.docx,.doc,.txt,.md,.xls,.xlsx,.csv"
           onChange={handleFileChange}
           className="hidden"
         />

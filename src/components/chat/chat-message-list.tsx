@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { MessageDTO } from "@/types";
 import { MarkdownRenderer } from "./markdown-renderer";
 import {
@@ -15,6 +16,7 @@ import {
   HelpCircle,
   ArrowUpRight,
   Bot,
+  UploadCloud,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -22,9 +24,15 @@ interface ChatMessageListProps {
   messages: MessageDTO[];
   isSending: boolean;
   onSendPrompt: (prompt: string) => void;
+  documentsCount?: number;
 }
 
-export function ChatMessageList({ messages, isSending, onSendPrompt }: ChatMessageListProps) {
+export function ChatMessageList({
+  messages,
+  isSending,
+  onSendPrompt,
+  documentsCount = 0,
+}: ChatMessageListProps) {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -88,9 +96,34 @@ export function ChatMessageList({ messages, isSending, onSendPrompt }: ChatMessa
               👋 Hello, {user?.name || "there"}!
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              I&apos;ve got your document workspace connected. Select an AI suggestion or type your question below.
+              Your AI Document Assistant is ready. Upload files or select an AI suggestion below to start asking questions.
             </p>
           </div>
+
+          {/* Quick upload prompt for new users */}
+          {documentsCount === 0 && (
+            <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-sky-50 via-sky-100/50 to-cyan-50 dark:from-slate-900 dark:via-slate-850 dark:to-sky-950/40 border border-sky-200/80 dark:border-sky-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Upload your first document
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Sync PDFs, DOCX, TXT or spreadsheets to ask questions with citations.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/upload"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-sm transition-all shrink-0"
+              >
+                <span>+ Add Documents</span>
+              </Link>
+            </div>
+          )}
 
           {/* Upgraded AI Suggestion Chips */}
           <div className="w-full space-y-3">
@@ -205,7 +238,12 @@ export function ChatMessageList({ messages, isSending, onSendPrompt }: ChatMessa
                         </button>
 
                         <button
-                          onClick={() => onSendPrompt(messages.find((m) => m.role === "USER")?.content || "")}
+                          onClick={() => {
+                            const lastUserMsg = [...messages].reverse().find((m) => m.role === "USER");
+                            if (lastUserMsg?.content) {
+                              onSendPrompt(lastUserMsg.content);
+                            }
+                          }}
                           title="Regenerate"
                           className="hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 text-xs"
                         >

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
 interface MarkdownRendererProps {
-  content: string;
+  content?: string | null;
 }
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
@@ -17,9 +17,10 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   };
 
   // Helper to parse simple markdown formatting cleanly
-  const renderFormattedText = (text: string) => {
-  console.log('AGENT RESPINSE IN TEXT', text);
-    
+  const renderFormattedText = (text?: string | null) => {
+    if (!text || typeof text !== "string") {
+      return null;
+    }
 
     const lines = text.split("\n");
     return lines.map((line, lineIdx) => {
@@ -82,7 +83,11 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     });
   };
 
-  const renderInlineSpans = (text: string) => {
+  const renderInlineSpans = (text?: string | null) => {
+    if (!text || typeof text !== "string") {
+      return null;
+    }
+
     // Split on **bold** and `code`
     const parts = text.split(/(\*\*.*?\*\*|`.*?`|\*.*?\*)/g);
 

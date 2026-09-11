@@ -46,7 +46,7 @@ export default function UploadPage() {
     // If any image is found, stop upload and show error
     if (imageFiles.length > 0) {
       const invalidNames = imageFiles.map((f) => f.name).join(", ");
-      toast.error(`Image uploads are not allowed: ${invalidNames}. Please upload documents only (PDF, DOCX, TXT, etc.).`, "Unsupported File Type");
+      toast.error(`Image uploads are not allowed: ${invalidNames}. Please upload documents only (PDF, DOCX, TXT, XLS, CSV, XLSX etc.).`, "Unsupported File Type");
       return; // Stop execution
     }
 
@@ -82,12 +82,24 @@ export default function UploadPage() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <Link href="/assistant">
-                <Button size="md" className="gap-2 shadow-md shadow-sky-500/20">
-                  <span>Open Assistant</span>
-                  <ArrowRight className="w-4 h-4" />
+              {isUploading ? (
+                <Button
+                  size="md"
+                  disabled
+                  className="gap-2 opacity-50 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-slate-700 shadow-none pointer-events-none"
+                  title="Upload in progress. Button will re-enable once upload is complete."
+                >
+                  <Loader2 className="w-4 h-4 animate-spin text-sky-500" />
+                  <span>Uploading Files...</span>
                 </Button>
-              </Link>
+              ) : (
+                <Link href="/assistant">
+                  <Button size="md" className="gap-2 shadow-md shadow-sky-500/20">
+                    <span>Open Assistant</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
