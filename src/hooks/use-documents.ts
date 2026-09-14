@@ -150,11 +150,14 @@ export function useDocuments() {
     }
   };
 
-  const deleteDocument = async (id: string) => {
+  const deleteDocument = async (id: string, name:string) => {
     try {
       const res = await fetch(`/api/documents/${id}`, {
         method: "DELETE",
-      });
+        body: JSON.stringify({
+          fileName: name
+        })
+      });      
 
       if (res.ok) {
         setDocuments((prev) => prev.filter((d) => d.id !== id));

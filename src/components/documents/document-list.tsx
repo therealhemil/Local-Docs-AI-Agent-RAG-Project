@@ -19,7 +19,7 @@ import {
 interface DocumentListProps {
   documents: DocumentDTO[];
   isLoading: boolean;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string, name:string) => Promise<void>;
   onUploadClick?: () => void;
 }
 
@@ -35,7 +35,7 @@ export function DocumentList({ documents, isLoading, onDelete, onUploadClick }: 
     try {
       setIsConfirmingDelete(true);
       setDeletingId(itemToDelete.id);
-      await onDelete(itemToDelete.id);
+      await onDelete(itemToDelete.id, itemToDelete.name);
       toast.success(`"${itemToDelete.name}" was removed from your workspace.`);
       setItemToDelete(null);
     } catch (err: any) {

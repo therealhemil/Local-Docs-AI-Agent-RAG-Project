@@ -159,7 +159,7 @@ export class DocumentService {
    */
   async deleteDocument(userId: string, documentId: string): Promise<boolean> {
     const doc = await prisma.document.findUnique({
-      where: { id: documentId },
+      where: { id: documentId }
     });
 
     if (!doc) {
