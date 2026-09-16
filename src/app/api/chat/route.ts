@@ -173,6 +173,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     let { conversationId, message, name } = body;
 
+    console.log('user name ', name);
+    
+
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json(
         { error: "Message content cannot be empty." },
@@ -231,6 +234,9 @@ export async function POST(req: NextRequest) {
             userId: session.userId,
           }),
         });
+
+        console.log('user name sending in chat', name || session.name);
+        
 
         const rawText = await n8nResponse.text();
         console.log("[n8n Response Status]:", n8nResponse.status);

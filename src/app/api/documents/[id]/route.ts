@@ -16,6 +16,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const { fileName } = body;
 
 
+    console.log('file name and details', fileName);
+    
+
+
     console.log('session in userid', session.userId);
     
 
@@ -37,7 +41,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       }),
     });
 
-    console.log("sending n8n data", res.body);
+    const data = await res.text()
+
+    console.log("sending n8n data", data);
 
     // 4. Handle failure & consume response stream
     // if (!res.ok) {

@@ -108,20 +108,16 @@ export function UserEntryCard() {
 
     try {
       if (provider === "google") {
-        // Prompt for Google account email or proceed with Google auth
-        const googleEmail =
-          email.trim() && email.includes("@")
-            ? email.trim()
-            : `google-user-${Math.floor(1000 + Math.random() * 9000)}@gmail.com`;
-        const googleName = name.trim() || "Google User";
-        await loginWithSocial("google", { email: googleEmail, name: googleName });
+        // Redirect to Auth0 Universal Login with Google connection.
+        // After OAuth, Auth0 calls /auth/callback then redirects to our bridge route.
+        window.location.href =
+          "/auth/login?connection=google-oauth2&returnTo=/api/auth/auth0-callback";
+        return; // navigation is happening — keep spinner visible
       } else if (provider === "github") {
-        const githubEmail =
-          email.trim() && email.includes("@")
-            ? email.trim()
-            : `github-user-${Math.floor(1000 + Math.random() * 9000)}@github.com`;
-        const githubName = name.trim() || "GitHub Developer";
-        await loginWithSocial("github", { email: githubEmail, name: githubName });
+        // Redirect to Auth0 Universal Login with GitHub connection.
+        window.location.href =
+          "/auth/login?connection=github&returnTo=/api/auth/auth0-callback";
+        return; // navigation is happening — keep spinner visible
       } else if (provider === "demo") {
         const demoId = Math.floor(100 + Math.random() * 900);
         await loginWithSocial("demo", {
@@ -138,6 +134,7 @@ export function UserEntryCard() {
       setSocialLoading(null);
     }
   };
+
 
   return (
     <div className="w-full max-w-lg mx-auto">

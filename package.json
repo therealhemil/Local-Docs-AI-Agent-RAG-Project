@@ -12,6 +12,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.29.0",
     "@n8n/chat": "^1.35.5",
     "@prisma/client": "^5.19.1",
     "@supabase/server": "^1.6.0",
