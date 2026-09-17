@@ -9,7 +9,8 @@ import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 import { VoiceModal } from "@/components/voice/voice-modal";
-import { Menu, X, Sparkles, FileText, Loader2, ArrowLeft } from "lucide-react";
+import { GoogleDriveConnectButton } from "@/components/chat/drive-connect-button";
+import { Menu, X, Sparkles, FileText, Loader2, ArrowLeft, Network } from "lucide-react";
 import Link from "next/link";
 
 export default function AssistantPage() {
@@ -128,7 +129,7 @@ export default function AssistantPage() {
       {/* Main Chat View */}
       <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50/30 dark:bg-slate-950/60">
         {/* Top Navbar */}
-        <header className="h-14 border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between glass">
+        <header className="relative z-40 h-14 border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between glass">
           <div className="flex items-center gap-3 min-w-0">
             {!isDrawerOpen ? (
               <button
@@ -155,7 +156,16 @@ export default function AssistantPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <GoogleDriveConnectButton />
+            <Link
+              href="/integrations"
+              className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500/10 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5"
+              title="Remote MCP Hub, Google Drive & GitHub Integrations"
+            >
+              <Network className="w-3.5 h-3.5 text-sky-500" />
+              <span className="hidden sm:inline">MCP Integrations</span>
+            </Link>
             <Link
               href="/upload"
               className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"

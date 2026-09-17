@@ -13,6 +13,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   FileText,
+  Folder,
   HelpCircle,
   ArrowUpRight,
   Bot,
@@ -201,18 +202,36 @@ export function ChatMessageList({
                             Cited Sources:
                           </span>
                           <div className="flex flex-wrap gap-2">
-                            {msg.sources.map((src, sIdx) => (
-                              <div
-                                key={sIdx}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-xs font-semibold text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80 font-mono shadow-sm"
-                              >
-                                <FileText className="w-3.5 h-3.5 text-sky-500" />
-                                <span>
-                                  {src.fileName}
-                                  {src.page ? ` — Page ${src.page}` : ""}
-                                </span>
-                              </div>
-                            ))}
+                            {msg.sources.map((src, sIdx) => {
+                              const isDrive =
+                                src.fileName.toLowerCase().includes("google drive") ||
+                                src.fileName.toLowerCase().includes("drive:");
+                              const isFolder = src.fileName.toLowerCase().includes("folder");
+                              return (
+                                <div
+                                  key={sIdx}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border font-mono shadow-sm ${
+                                    isDrive
+                                      ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/80"
+                                      : "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80"
+                                  }`}
+                                >
+                                  {isFolder ? (
+                                    <Folder className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                                  ) : (
+                                    <FileText
+                                      className={`w-3.5 h-3.5 ${
+                                        isDrive ? "text-amber-500" : "text-sky-500"
+                                      }`}
+                                    />
+                                  )}
+                                  <span>
+                                    {src.fileName}
+                                    {src.page ? ` — Page ${src.page}` : ""}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth";
 import { conversationService } from "@/services/conversation.service";
 import { aiService } from "@/services/ai.service";
+import { mcpDriveClient } from "../../../../mcp-server/lib/google-drive";
+import { answerWithContext } from "../../../../mcp-server/lib/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -171,10 +173,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { conversationId, message, name } = body;
+    let { conversationId, message, name, attachedDriveFiles } = body;
 
     console.log('user name ', name);
-    
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json(
@@ -184,6 +185,40 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanMessage = message.trim();
+
+    // Extract text from any attached Google Drive files / folders
+    let driveContext = "";
+    const driveSources: any[] = [];
+    const attachedNames: string[] = [];
+
+    if (Array.isArray(attachedDriveFiles) && attachedDriveFiles.length > 0) {
+      console.log(`[API: /api/chat] Reading ${attachedDriveFiles.length} attached Google Drive items...`);
+      for (const item of attachedDriveFiles) {
+        if (item.isFolder) {
+          try {
+            const folderFiles = await mcpDriveClient.extractFolderText(item.id);
+            for (const ff of folderFiles) {
+              driveContext += `\n\n=== [Google Drive Folder: ${item.name} / File: ${ff.fileName}] ===\n${ff.text}\n`;
+              driveSources.push({ fileName: `${item.name}/${ff.fileName}` });
+              attachedNames.push(`${item.name}/${ff.fileName}`);
+            }
+          } catch (err) {
+            console.warn(`[API: /api/chat] Error extracting folder ${item.name}:`, err);
+          }
+        } else {
+          try {
+            const text = await mcpDriveClient.extractText(item.id, item.mimeType || "application/octet-stream");
+            if (text) {
+              driveContext += `\n\n=== [Google Drive Document: ${item.name}] ===\n${text}\n`;
+              driveSources.push({ fileName: item.name });
+              attachedNames.push(item.name);
+            }
+          } catch (err) {
+            console.warn(`[API: /api/chat] Error extracting file ${item.name}:`, err);
+          }
+        }
+      }
+    }
 
     // Auto-create conversation if none supplied
     if (!conversationId) {
@@ -208,6 +243,7 @@ export async function POST(req: NextRequest) {
       conversationId,
       role: "USER",
       content: cleanMessage,
+      sources: driveSources.length > 0 ? driveSources : undefined,
     });
 
     // 2. Call n8n webhook API
@@ -218,25 +254,32 @@ export async function POST(req: NextRequest) {
     if (userMessageAPI) {
       try {
         console.log(`[API: /api/chat] Dispatching prompt to n8n webhook: ${userMessageAPI}`);
+        const n8nPayload: any = {
+          action: "sendMessage",
+          role: "USER",
+          sessionid: conversationId,
+          sessionId: conversationId,
+          conversationId: conversationId,
+          message: driveContext
+            ? `${cleanMessage}\n\n[Context from attached Google Drive files (${attachedNames.join(", ")}):\n${driveContext}]`
+            : cleanMessage,
+          userName: name || session.name,
+          userId: session.userId,
+        };
+        if (driveContext) {
+          n8nPayload.context = driveContext;
+          n8nPayload.driveFiles = attachedNames;
+        }
+
         const n8nResponse = await fetch(userMessageAPI, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            action: "sendMessage",
-            role: "USER",
-            sessionid: conversationId,
-            sessionId: conversationId,
-            conversationId: conversationId,
-            message: cleanMessage,
-            userName: name || session.name,
-            userId: session.userId,
-          }),
+          body: JSON.stringify(n8nPayload),
         });
 
         console.log('user name sending in chat', name || session.name);
-        
 
         const rawText = await n8nResponse.text();
         console.log("[n8n Response Status]:", n8nResponse.status);
@@ -255,18 +298,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Fallback to local AI service if webhook is not configured, failed, or returned empty
+    // 3. Fallback to Drive context AI answering or local workspace AI fallback
     if (!assistantContent || assistantContent.trim().length === 0) {
-      console.log("[API: /api/chat] n8n output empty or unavailable. Triggering intelligent document AI fallback...");
-      const aiResult = await aiService.askQuestion({
-        userId: session.userId,
-        conversationId,
-        question: cleanMessage,
-      });
-      assistantContent = aiResult.answer;
-      if (!assistantSources || (Array.isArray(assistantSources) && assistantSources.length === 0)) {
-        assistantSources = aiResult.sources;
+      if (driveContext) {
+        console.log("[API: /api/chat] Answering directly using attached Google Drive context...");
+        const aiAnswer = await answerWithContext({
+          question: cleanMessage,
+          context: driveContext,
+          fileNames: attachedNames,
+          userId: session.userId,
+          conversationId,
+        });
+        assistantContent = aiAnswer.answer;
+      } else {
+        console.log("[API: /api/chat] n8n output empty or unavailable. Triggering intelligent document AI fallback...");
+        const aiResult = await aiService.askQuestion({
+          userId: session.userId,
+          conversationId,
+          question: cleanMessage,
+        });
+        assistantContent = aiResult.answer;
+        if (!assistantSources || (Array.isArray(assistantSources) && assistantSources.length === 0)) {
+          assistantSources = aiResult.sources;
+        }
       }
+    }
+
+    // Merge Google Drive sources with any n8n sources
+    if (driveSources.length > 0) {
+      const existing = Array.isArray(assistantSources) ? assistantSources : [];
+      assistantSources = [...driveSources, ...existing];
     }
 
     // Ensure we always have valid text

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "./theme-toggle";
-import { Sparkles, FileText, User, LogOut, ArrowRight, Menu, X, MessageSquare } from "lucide-react";
+import { Sparkles, FileText, User, LogOut, ArrowRight, Menu, X, MessageSquare, Network } from "lucide-react";
 import { Button } from "./button";
 
 export function Header() {
@@ -52,6 +52,10 @@ export function Header() {
                 </Link>
                 <Link href="/assistant" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
                   Assistant
+                </Link>
+                <Link href="/integrations" className="flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+                  <span>MCP Hub</span>
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Remote</span>
                 </Link>
               </>
             )}
@@ -181,6 +185,17 @@ export function Header() {
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>AI Assistant Chat</span>
+                  </Link>
+                  <Link
+                    href="/integrations"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Network className="w-4 h-4 text-sky-500" />
+                      <span>MCP Hub & Integrations</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Remote</span>
                   </Link>
                 </>
               )}

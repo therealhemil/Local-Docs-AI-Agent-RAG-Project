@@ -1,0 +1,10 @@
+[
+  {
+    "id": "remote_1789557504816_1twa",
+    "name": "My Google Drive",
+    "url": "https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.metadata.readonly&prompt=consent&response_type=code&client_id=719145537313-h543nk2hidlp9vas3io867r2glplaf3v.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fassistant",
+    "headers": {},
+    "cachedTools": [],
+    "createdAt": "2026-09-16T11:18:24.816Z"
+  }
+]

@@ -9,22 +9,31 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "mcp": "tsx mcp-server/index.ts",
+    "mcp:auth": "tsx mcp-server/scripts/auth.ts"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.29.0",
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@n8n/chat": "^1.35.5",
     "@prisma/client": "^5.19.1",
     "@supabase/server": "^1.6.0",
+    "@types/pdf-parse": "^1.1.5",
     "axios": "1.14.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "googleapis": "^144.0.0",
     "jose": "^5.9.3",
     "lucide-react": "^0.441.0",
+    "mammoth": "^1.12.3",
     "next": "14.2.13",
+    "pdf-parse": "^2.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@types/node": "^20.16.5",

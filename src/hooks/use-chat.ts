@@ -148,7 +148,11 @@ export function useChat() {
     }
   };
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (
+    content: string,
+    attachedDriveFiles?: Array<{ id: string; name: string; mimeType: string; isFolder?: boolean }>,
+    isDriveAgentMode?: boolean
+  ) => {
     if (!content.trim() || isSending) return null;
 
     setIsSending(true);
@@ -160,20 +164,30 @@ export function useChat() {
       conversationId: activeConversationId || "temp",
       role: "USER",
       content: content.trim(),
+      sources: attachedDriveFiles?.map((f) => ({ fileName: f.name })),
       createdAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, optimisticUserMessage]);
 
     try {
-      const res = await fetch("/api/chat", {
+      const endpoint = isDriveAgentMode ? "/api/chat/drive" : "/api/chat";
+      const payload = isDriveAgentMode
+        ? {
+            conversationId: activeConversationId,
+            message: content.trim(),
+          }
+        : {
+            conversationId: activeConversationId,
+            name: user?.name,
+            message: content.trim(),
+            attachedDriveFiles,
+          };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId: activeConversationId,
-          name: user?.name,
-          message: content.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
